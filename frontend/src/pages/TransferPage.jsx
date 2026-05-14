@@ -20,6 +20,8 @@ export default function TransferPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
+  const [transactionId, setTransactionId] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   // Set first account as default
   useEffect(() => {
@@ -35,6 +37,14 @@ export default function TransferPage() {
     handleChange(e);
     const account = accounts.find(acc => acc.id.toString() === accountId);
     setSelectedAccount(account);
+  };
+
+  const handleCopyTransactionId = () => {
+    if (transactionId) {
+      navigator.clipboard.writeText(transactionId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -61,22 +71,28 @@ export default function TransferPage() {
       });
 
       const transaction = response.data.data;
+      const txnId = transaction.transaction_id;
+
+      setTransactionId(txnId);
 
       addTransaction({
-        id: transaction.id,
-        sender_account_id: transaction.sender_account_id,
-        receiver_account_id: transaction.receiver_account_id,
+        id: transaction.sender_account?.id || transaction.id,
+        transaction_id: txnId,
+        sender_account_id: transaction.sender_account?.id,
+        receiver_account_id: transaction.receiver_account?.id,
         amount: transaction.amount,
         status: transaction.status,
         timestamp: transaction.timestamp,
         type: 'debit',
-        description: transaction.description,
-        reference_id: transaction.reference_id
+        description: transaction.description || 'Transfer',
+        reference_id: transaction.reference_id,
+        is_debit: true,
+        display_amount: -transaction.amount
       });
 
       addNotification({
         title: 'Transfer successful',
-        message: `₹${transaction.amount.toLocaleString()} sent to ${values.receiverAccountNumber}`,
+        message: `₹${transaction.amount.toLocaleString('en-IN')} sent to ${values.receiverAccountNumber} (ID: ${txnId})`,
         level: 'success',
         time: 'Now',
       });
@@ -84,7 +100,7 @@ export default function TransferPage() {
       setSuccess(true);
       reset();
       setSelectedAccount(null);
-      setTimeout(() => setSuccess(false), 3000);
+      setTimeout(() => setSuccess(false), 5000);
     } catch (err) {
       const message = err.response?.data?.message || err.message;
       setError(message);
@@ -205,16 +221,30 @@ export default function TransferPage() {
           </div>
 
           <AnimatePresence>
-            {success ? (
+            {success && transactionId ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.92, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96 }}
-                className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-6 text-center text-emerald-100 shadow-glow"
+                className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-6 text-center text-emerald-100 shadow-glow space-y-4"
               >
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-400/15 text-3xl">✓</div>
-                <h3 className="mt-4 font-display text-2xl text-white">Transfer successful</h3>
-                <p className="mt-2 text-sm text-emerald-100/80">The transaction has been recorded in your history.</p>
+                <div>
+                  <h3 className="font-display text-2xl text-white">Transfer successful</h3>
+                  <p className="mt-2 text-sm text-emerald-100/80">The transaction has been recorded in your history.</p>
+                </div>
+                <div className="pt-2 border-t border-emerald-400/20">
+                  <p className="text-xs text-emerald-100/60 mb-2">Transaction ID:</p>
+                  <div className="flex items-center gap-2 justify-center bg-emerald-400/5 rounded-lg p-3">
+                    <span className="font-mono text-sm font-semibold text-emerald-300">{transactionId}</span>
+                    <button
+                      onClick={handleCopyTransactionId}
+                      className="text-xs px-3 py-1 rounded bg-emerald-400/20 hover:bg-emerald-400/30 text-emerald-200 transition-colors"
+                    >
+                      {copied ? '✓' : 'Copy'}
+                    </button>
+                  </div>
+                </div>
               </motion.div>
             ) : null}
           </AnimatePresence>

@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 from database import db
 from models import Transaction, Account, FraudAlert, Notification
-from utils import generate_reference_id
+from utils import generate_reference_id, generate_transaction_id
 from utils.validation import validate_amount
 
 class TransactionService:
@@ -15,7 +15,7 @@ class TransactionService:
     
     @staticmethod
     def transfer_funds(sender_account_id, receiver_account_number, amount, description=""):
-        """Transfer funds between accounts with fraud detection"""
+        """Transfer funds between accounts with fraud detection and atomic transaction handling"""
         # Validate amount
         is_valid, error = validate_amount(amount)
         if not is_valid:
@@ -38,18 +38,26 @@ class TransactionService:
             if receiver_account.status != 'active':
                 return None, f"Receiver account is {receiver_account.status}"
             
+            # Prevent self-transfer
+            if sender_account.id == receiver_account.id:
+                return None, "Cannot transfer to the same account"
+            
             # Validate balance
             if sender_account.balance < amount:
                 return None, "Insufficient balance"
             
-            # Create transaction
+            # Generate unique transaction ID
+            transaction_id = generate_transaction_id()
             reference_id = generate_reference_id()
+            
+            # Create transaction record
             transaction = Transaction(
+                transaction_id=transaction_id,
                 sender_account_id=sender_account_id,
                 receiver_account_id=receiver_account.id,
                 amount=amount,
                 transaction_type='transfer',
-                description=description,
+                description=description or f"Transfer to {receiver_account.account_number}",
                 status='pending',
                 reference_id=reference_id
             )
@@ -65,18 +73,22 @@ class TransactionService:
                     reason=fraud_result['reason']
                 )
                 db.session.add(fraud_alert)
+            else:
+                transaction.status = 'completed'
             
-            # Update balances
+            # Add transaction to session
+            db.session.add(transaction)
+            db.session.flush()  # Get transaction ID
+            
+            # Update balances atomically
             sender_account.balance -= amount
             receiver_account.balance += amount
             
-            db.session.add(transaction)
-            db.session.flush()
-            
-            # Update fraud alert with transaction ID
+            # Update fraud alert with transaction ID if flagged
             if fraud_result['flagged']:
                 fraud_alert.transaction_id = transaction.id
             
+            # Commit all changes atomically
             db.session.commit()
             
             # Create notification for receiver
@@ -89,7 +101,26 @@ class TransactionService:
             db.session.add(notification)
             db.session.commit()
             
-            return transaction.to_dict(), None
+            # Return transaction with both perspectives
+            return {
+                'transaction_id': transaction_id,
+                'sender_account': {
+                    'id': sender_account.id,
+                    'account_number': sender_account.account_number,
+                    'user_id': sender_account.user_id,
+                    'new_balance': sender_account.balance
+                },
+                'receiver_account': {
+                    'id': receiver_account.id,
+                    'account_number': receiver_account.account_number,
+                    'user_id': receiver_account.user_id,
+                    'new_balance': receiver_account.balance
+                },
+                'amount': amount,
+                'status': transaction.status,
+                'timestamp': transaction.timestamp.isoformat(),
+                'fraud_flagged': fraud_result['flagged']
+            }, None
         
         except Exception as e:
             db.session.rollback()
@@ -147,7 +178,7 @@ class TransactionService:
     
     @staticmethod
     def get_transaction_history(account_id, limit=50, offset=0):
-        """Get transaction history for an account"""
+        """Get transaction history for an account (both sent and received)"""
         account = Account.query.get(account_id)
         if not account:
             return None, "Account not found"
@@ -156,13 +187,26 @@ class TransactionService:
         sent = Transaction.query.filter_by(sender_account_id=account_id).all()
         received = Transaction.query.filter_by(receiver_account_id=account_id).all()
         
+        # Combine and sort by timestamp
         transactions = sorted(sent + received, key=lambda x: x.timestamp, reverse=True)
-        return [t.to_dict() for t in transactions[offset:offset+limit]], None
+        
+        # Convert to dicts with viewer perspective
+        transaction_dicts = [t.to_dict(viewer_account_id=account_id) for t in transactions]
+        
+        return transaction_dicts[offset:offset+limit], None
     
     @staticmethod
     def get_transaction(transaction_id):
-        """Get single transaction"""
+        """Get single transaction by ID"""
         transaction = Transaction.query.get(transaction_id)
         if not transaction:
             return None, "Transaction not found"
         return transaction.to_dict(), None
+    
+    @staticmethod
+    def get_transaction_by_txn_id(transaction_id_str):
+        """Get transaction by transaction ID string (TXN...)"""
+        transaction = Transaction.query.filter_by(transaction_id=transaction_id_str).first()
+        if not transaction:
+            return None, "Transaction not found"
+        return transaction, None

@@ -63,6 +63,12 @@ export default function AdminPage() {
 
       <div className="grid gap-4 md:grid-cols-4">
         <BalanceCard 
+          title="Total Transactions" 
+          value={transactions.length.toString()} 
+          trend="Real-time"
+          caption="All transfers" 
+        />
+        <BalanceCard 
           title="Total Alerts" 
           value={alerts.length.toString()} 
           trend="System-wide"
@@ -80,13 +86,6 @@ export default function AdminPage() {
           value={(stats?.total_users || 0).toString()} 
           trend="Accounts"
           caption="Registered users"
-        />
-        <BalanceCard 
-          title="Total Accounts" 
-          value={(stats?.total_accounts || 0).toString()}
-          trend="Accounts"
-          caption="Active banking accounts"
-          accent="emerald"
         />
       </div>
 
@@ -108,11 +107,11 @@ export default function AdminPage() {
                   key={transaction.id}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center justify-between rounded-2xl border border-white/8 bg-white/5 px-4 py-3"
+                  className="flex items-center justify-between rounded-2xl border border-white/8 bg-white/5 px-4 py-3 hover:bg-white/10 transition-colors"
                 >
                   <div className="flex-1">
-                    <p className="text-sm text-slate-300 font-mono">
-                      {transaction.reference_id?.slice(0, 16)}...
+                    <p className="text-sm text-slate-300 font-mono font-semibold">
+                      {transaction.transaction_id || transaction.reference_id?.slice(0, 16)}
                     </p>
                     <p className="text-xs text-slate-500 mt-1">
                       {transaction.description || 'Transfer'}

@@ -17,11 +17,13 @@ export default function TransactionsPage() {
   const [status, setStatus] = useState('All');
   const [type, setType] = useState('All');
   const [page, setPage] = useState(1);
+  const [copied, setCopied] = useState(false);
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((transaction) => {
       const matchesQuery = [
         transaction.description || '',
+        transaction.transaction_id || '',
         transaction.reference_id || '',
         transaction.status || ''
       ].join(' ').toLowerCase().includes(query.toLowerCase());
@@ -35,6 +37,11 @@ export default function TransactionsPage() {
 
   const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / pageSize));
   const currentTransactions = filteredTransactions.slice((page - 1) * pageSize, page * pageSize);
+
+  const handleCopyId = () => {
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (loading) {
     return <LoadingSpinner label="Loading transactions..." />;
@@ -63,7 +70,7 @@ export default function TransactionsPage() {
             setQuery(e.target.value); 
             setPage(1); 
           }} 
-          placeholder="Search description or reference ID"
+          placeholder="Search by description, transaction ID or reference"
         />
         
         <div className="grid gap-4 grid-cols-2">
@@ -125,7 +132,7 @@ export default function TransactionsPage() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
                 >
-                  <TransactionCard transaction={transaction} />
+                  <TransactionCard transaction={transaction} onCopyId={handleCopyId} />
                 </motion.div>
               ))}
             </div>

@@ -1,7 +1,7 @@
 """Admin routes"""
 from flask import Blueprint, request
-from models import User, Account, FraudAlert, Notification
-from services import AccountService
+from models import User, Account, FraudAlert, Notification, Transaction
+from services import AccountService, TransactionService
 from utils.response import success_response, error_response
 from middleware import admin_required
 from database import db
@@ -97,10 +97,97 @@ def admin_dashboard(current_user_id):
     total_accounts = Account.query.count()
     pending_loans = db.session.query(db.func.count()).filter_by(status='pending')[0][0]
     unreviewed_alerts = FraudAlert.query.filter_by(is_reviewed=False).count()
+    total_transactions = Transaction.query.count()
     
     return success_response("Dashboard stats", {
         'total_users': total_users,
         'total_accounts': total_accounts,
         'pending_loans': pending_loans,
-        'unreviewed_fraud_alerts': unreviewed_alerts
+        'unreviewed_fraud_alerts': unreviewed_alerts,
+        'total_transactions': total_transactions
     })
+
+@admin_bp.route('/transactions', methods=['GET'])
+@admin_required
+def get_all_transactions(current_user_id):
+    """Get all transactions with filters"""
+    limit = request.args.get('limit', 50, type=int)
+    offset = request.args.get('offset', 0, type=int)
+    status = request.args.get('status', None)
+    transaction_id = request.args.get('transaction_id', None)
+    
+    query = Transaction.query
+    
+    # Filter by status if provided
+    if status:
+        query = query.filter_by(status=status)
+    
+    # Filter by transaction ID if provided
+    if transaction_id:
+        query = query.filter_by(transaction_id=transaction_id)
+    
+    # Sort by newest first
+    transactions = query.order_by(Transaction.timestamp.desc()).limit(limit).offset(offset).all()
+    total = query.count()
+    
+    transaction_list = []
+    for t in transactions:
+        sender = Account.query.get(t.sender_account_id) if t.sender_account_id else None
+        receiver = Account.query.get(t.receiver_account_id)
+        
+        transaction_list.append({
+            'transaction_id': t.transaction_id,
+            'id': t.id,
+            'amount': t.amount,
+            'status': t.status,
+            'timestamp': t.timestamp.isoformat(),
+            'sender_account': sender.account_number if sender else 'N/A',
+            'receiver_account': receiver.account_number if receiver else 'N/A',
+            'transaction_type': t.transaction_type,
+            'has_fraud_alert': bool(t.fraud_alerts)
+        })
+    
+    return success_response("Transactions retrieved", {
+        'transactions': transaction_list,
+        'total': total,
+        'limit': limit,
+        'offset': offset
+    })
+
+@admin_bp.route('/transactions/<transaction_id_str>', methods=['GET'])
+@admin_required
+def get_admin_transaction_details(current_user_id, transaction_id_str):
+    """Get detailed transaction info for admin"""
+    transaction, error = TransactionService.get_transaction_by_txn_id(transaction_id_str)
+    if error:
+        return error_response(error, status_code=404)
+    
+    sender = Account.query.get(transaction.sender_account_id) if transaction.sender_account_id else None
+    receiver = Account.query.get(transaction.receiver_account_id)
+    sender_user = User.query.get(sender.user_id) if sender else None
+    receiver_user = User.query.get(receiver.user_id) if receiver else None
+    
+    details = {
+        'transaction_id': transaction.transaction_id,
+        'id': transaction.id,
+        'amount': transaction.amount,
+        'status': transaction.status,
+        'timestamp': transaction.timestamp.isoformat(),
+        'description': transaction.description,
+        'transaction_type': transaction.transaction_type,
+        'sender': {
+            'account_number': sender.account_number if sender else 'N/A',
+            'account_id': sender.id if sender else None,
+            'user_name': sender_user.full_name if sender_user else 'N/A',
+            'user_id': sender_user.id if sender_user else None
+        },
+        'receiver': {
+            'account_number': receiver.account_number if receiver else 'N/A',
+            'account_id': receiver.id if receiver else None,
+            'user_name': receiver_user.full_name if receiver_user else 'N/A',
+            'user_id': receiver_user.id if receiver_user else None
+        },
+        'fraud_alerts': [alert.to_dict() for alert in transaction.fraud_alerts]
+    }
+    
+    return success_response("Transaction details retrieved", details)
