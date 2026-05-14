@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import PublicLayout from '@/layouts/PublicLayout';
 import AuthLayout from '@/layouts/AuthLayout';
 import DashboardLayout from '@/layouts/DashboardLayout';
@@ -24,14 +25,18 @@ function PageMotion({ children }) {
   );
 }
 
-function ProtectedRoute({ children }) {
-  const auth = useAuth();
-  return auth?.isAuthenticated ? children : <Navigate to="/login" replace />;
-}
-
 function AdminRoute({ children }) {
-  const auth = useAuth();
-  return auth?.isAdmin ? children : <Navigate to="/dashboard" replace />;
+  const { isAdmin, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
+  return isAdmin ? children : <Navigate to="/dashboard" replace />;
 }
 
 export default function AppRouter() {
