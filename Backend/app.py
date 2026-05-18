@@ -5,7 +5,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
 
-# Load environment variables
+# Load environment variables (important for local development)
 load_dotenv()
 
 # Import configuration
@@ -58,7 +58,11 @@ def create_app(config_name='development'):
     
     # Create database tables
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+        except Exception as e:
+            # In production, database might already be initialized
+            app.logger.warning(f"Database initialization warning: {str(e)}")
     
     # Register blueprints
     app.register_blueprint(auth_bp)
@@ -67,13 +71,31 @@ def create_app(config_name='development'):
     app.register_blueprint(loan_bp)
     app.register_blueprint(admin_bp)
     
-    # Health check
+    # Root endpoint
+    @app.route('/', methods=['GET'])
+    def root():
+        return jsonify({
+            'success': True,
+            'message': 'NeoBankX API',
+            'version': '1.0.0',
+            'endpoints': {
+                'health': '/api/health',
+                'auth': '/api/auth',
+                'accounts': '/api/accounts',
+                'transactions': '/api/transactions',
+                'loans': '/api/loans',
+                'admin': '/api/admin'
+            }
+        }), 200
+    
+    # Health check endpoint
     @app.route('/api/health', methods=['GET'])
     def health_check():
         return jsonify({
             'success': True,
             'message': 'NeoBankX API is running',
-            'status': 'healthy'
+            'status': 'healthy',
+            'environment': config_name
         }), 200
     
     # Debug token endpoint
@@ -134,3 +156,4 @@ if __name__ == '__main__':
         port=5000,
         debug=debug
     )
+

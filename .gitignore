@@ -1,0 +1,82 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv-1/
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Node / Frontend
+node_modules/
+npm-debug.log
+yarn-error.log
+frontend/dist/
+frontend/build/
+.parcel-cache/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+instance/
+*.pyc
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel
+out/
+
+# Sensitive files
+.env
+.env.production
+.env.development
+.env.local
+secrets.json
+config/secrets/*
+
+# Dependencies
+node_modules/
+Backend/venv/
