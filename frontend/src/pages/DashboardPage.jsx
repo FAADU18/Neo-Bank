@@ -128,9 +128,11 @@ export default function DashboardPage() {
             <h3 className="font-display text-lg text-white">Quick actions</h3>
             <div className="mt-4 grid grid-cols-2 gap-3">
               {[
+                { label: 'Accounts', action: () => navigate('/accounts') },
                 { label: 'Transfer', action: () => navigate('/transfer') },
                 { label: 'View Loans', action: () => navigate('/loans') },
                 { label: 'Transactions', action: () => navigate('/transactions') },
+                { label: 'Analytics', action: () => navigate('/analytics') },
                 { label: 'Profile', action: () => navigate('/profile') }
               ].map((item) => (
                 <button

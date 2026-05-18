@@ -58,4 +58,4 @@ def create_account(current_user_id):
     if error:
         return error_response(error, status_code=400)
     
-    return success_response("Account created", result, 201)
+    return success_response("Account created successfully", result, 201)

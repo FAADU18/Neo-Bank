@@ -1,9 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { accountAPI, transactionAPI, loanAPI, adminAPI } from '@/services/api';
 
 const DashboardContext = createContext(null);
 
 export function DashboardProvider({ children }) {
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [stats, setStats] = useState(null);
   const [accounts, setAccounts] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -15,6 +17,11 @@ export function DashboardProvider({ children }) {
 
   // Fetch all dashboard data
   useEffect(() => {
+    if (authLoading || !isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
     const fetchData = async () => {
       setLoading(true);
       try {
@@ -52,10 +59,15 @@ export function DashboardProvider({ children }) {
     };
 
     fetchData();
-  }, []);
+  }, [authLoading, isAuthenticated]);
 
   // Fetch users for admin
   useEffect(() => {
+    if (authLoading || !isAuthenticated) {
+      setUsers([]);
+      return;
+    }
+
     const fetchUsers = async () => {
       try {
         const res = await adminAPI.getUsers();
@@ -66,7 +78,7 @@ export function DashboardProvider({ children }) {
     };
 
     fetchUsers();
-  }, []);
+  }, [authLoading, isAuthenticated]);
 
   const addTransaction = (transaction) => {
     setTransactions((current) => [transaction, ...current]);

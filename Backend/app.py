@@ -28,9 +28,33 @@ def create_app(config_name='development'):
     app.config.from_object(config_dict.get(config_name, DevelopmentConfig))
     
     # Initialize extensions
-    CORS(app, origins=app.config['CORS_ORIGINS'])
+    CORS(app, origins=app.config['CORS_ORIGINS'], supports_credentials=True)
     db.init_app(app)
-    JWTManager(app)
+    jwt = JWTManager(app)
+    
+    # JWT error handlers
+    @jwt.unauthorized_loader
+    def missing_token_callback(error):
+        return jsonify({
+            'success': False,
+            'message': 'Request does not contain an access token',
+            'error': error
+        }), 401
+    
+    @jwt.invalid_token_loader
+    def invalid_token_callback(error):
+        return jsonify({
+            'success': False,
+            'message': 'Invalid access token',
+            'error': error
+        }), 401
+    
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        return jsonify({
+            'success': False,
+            'message': 'Access token has expired',
+        }), 401
     
     # Create database tables
     with app.app_context():
@@ -51,6 +75,32 @@ def create_app(config_name='development'):
             'message': 'NeoBankX API is running',
             'status': 'healthy'
         }), 200
+    
+    # Debug token endpoint
+    @app.route('/api/debug/token', methods=['GET'])
+    def debug_token():
+        """Debug endpoint to check token validation"""
+        from flask import request
+        from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
+        
+        auth_header = request.headers.get('Authorization')
+        
+        try:
+            verify_jwt_in_request()
+            user_id = get_jwt_identity()
+            return jsonify({
+                'success': True,
+                'message': 'Token is valid',
+                'user_id': user_id,
+                'auth_header': auth_header[:20] + '...' if auth_header else None
+            }), 200
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'message': str(e),
+                'auth_header_present': bool(auth_header),
+                'auth_header': auth_header[:50] + '...' if auth_header else 'None'
+            }), 401
     
     # Error handlers
     @app.errorhandler(404)
