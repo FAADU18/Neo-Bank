@@ -15,12 +15,14 @@ Copy `.env.example` to `.env`:
 cp .env.example .env
 ```
 
-Edit `.env` with your configuration:
+Edit `.env` with your configuration (for production point `DATABASE_URL` to your Supabase/Postgres instance):
 
 ```env
 FLASK_ENV=development
 JWT_SECRET_KEY=change-this-to-a-random-string
-DATABASE_URL=sqlite:///banking_app.db
+# Example production DATABASE_URL for Supabase/Postgres:
+# postgresql://username:password@db.host.supabase.co:5432/neobankx_db
+DATABASE_URL=
 CORS_ORIGINS=http://localhost:5173,http://localhost:3000
 ```
 
@@ -35,22 +37,21 @@ Backend will start on: `http://localhost:5000`
 
 ## Database Setup
 
-### SQLite (Default - No Setup Needed)
-Database file `banking_app.db` is created automatically.
+### PostgreSQL (recommended for production)
 
-### PostgreSQL Setup
-
-1. **Install PostgreSQL** on your system
+1. **Install PostgreSQL** on your system or create a Supabase database
 
 2. **Create database:**
 ```bash
 createdb neobankx_db
 ```
 
-3. **Update .env:**
+3. **Update `.env`:**
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/neobankx_db
 ```
+
+For local development you may still use SQLite by setting `LOCAL_DATABASE_URL` if desired, but production deployments must use `DATABASE_URL` pointing to Postgres/Supabase.
 
 ### MySQL Setup
 

@@ -58,11 +58,27 @@ def create_app(config_name='development'):
     
     # Create database tables
     with app.app_context():
+        # Import models so SQLAlchemy is aware of them before creating tables
+        try:
+            from models import user, account, transaction, loan, fraud_alert, notification  # noqa: F401
+        except Exception:
+            # If relative imports are needed in some environments, try package-style
+            try:
+                import models.user, models.account, models.transaction, models.loan, models.fraud_alert, models.notification  # noqa: F401
+            except Exception:
+                app.logger.exception('Failed to import models before db.create_all()')
+
+        # Debug: print the DB URI so we can verify which database is being used in logs
+        db_uri = app.config.get('SQLALCHEMY_DATABASE_URI')
+        app.logger.info('SQLALCHEMY_DATABASE_URI=%s', db_uri)
+        print(f'SQLALCHEMY_DATABASE_URI={db_uri}')
+
         try:
             db.create_all()
+            app.logger.info('Database tables created / verified successfully')
         except Exception as e:
-            # In production, database might already be initialized
-            app.logger.warning(f"Database initialization warning: {str(e)}")
+            # In production, database might already be initialized or connection may fail
+            app.logger.exception('Database initialization warning: %s', str(e))
     
     # Register blueprints
     app.register_blueprint(auth_bp)
