@@ -27,13 +27,7 @@
       "dest": "/frontend/dist/index.html"
     }
   ],
-  "functions": {
-    "api/index.py": {
-      "memory": 1024,
-      "maxDuration": 60,
-      "runtime": "python3.11"
-    }
-  },
+  
   "github": {
     "silent": true
   }
