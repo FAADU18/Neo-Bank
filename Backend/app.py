@@ -9,11 +9,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import configuration
-from config import DevelopmentConfig, ProductionConfig, TestingConfig
-from database import db, init_db
+from Backend.config import DevelopmentConfig, ProductionConfig, TestingConfig
+from Backend.database import db, init_db
 
 # Import routes
-from routes import auth_bp, account_bp, transaction_bp, loan_bp, admin_bp
+from Backend.routes import auth_bp, account_bp, transaction_bp, loan_bp, admin_bp
 
 def create_app(config_name='development'):
     """Application factory"""
@@ -60,11 +60,11 @@ def create_app(config_name='development'):
     with app.app_context():
         # Import models so SQLAlchemy is aware of them before creating tables
         try:
-            from models import user, account, transaction, loan, fraud_alert, notification  # noqa: F401
+            from Backend.models import user, account, transaction, loan, fraud_alert, notification  # noqa: F401
         except Exception:
             # If relative imports are needed in some environments, try package-style
             try:
-                import models.user, models.account, models.transaction, models.loan, models.fraud_alert, models.notification  # noqa: F401
+                import Backend.models.user, Backend.models.account, Backend.models.transaction, Backend.models.loan, Backend.models.fraud_alert, Backend.models.notification  # noqa: F401
             except Exception:
                 app.logger.exception('Failed to import models before db.create_all()')
 
