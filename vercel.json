@@ -1,6 +1,7 @@
 {
   "version": 2,
   "buildCommand": "npm run build --prefix frontend",
+  "installCommand": "npm ci --prefix frontend",
   "outputDirectory": "frontend/dist",
   "env": {
     "FLASK_ENV": "production",
