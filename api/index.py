@@ -9,6 +9,12 @@ import os
 # Add parent directory to path so we can import Backend modules
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
+# If vendored dependencies were installed into api/.vercel during build,
+# add that folder to the import path so runtime can find Flask and friends.
+vendor_site = os.path.join(os.path.dirname(__file__), '.vercel')
+if os.path.isdir(vendor_site):
+	sys.path.insert(0, vendor_site)
+
 # Set Flask environment to production for Vercel
 os.environ.setdefault('FLASK_ENV', 'production')
 
