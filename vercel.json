@@ -8,25 +8,7 @@
     "PYTHONUNBUFFERED": "1",
     "PYTHONDONTWRITEBYTECODE": "1"
   },
-  "builds": [
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "15mb",
-        "runtime": "python3.11"
-      }
-    },
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "frontend/dist",
-        "buildCommand": "npm run build",
-        "outputDirectory": "dist"
-      }
-    }
-  ],
+  
   "routes": [
     {
       "src": "/api/(.*)",
