@@ -2,7 +2,8 @@
 
 Full-stack digital banking app: React (Vite) frontend, Flask API, JWT auth, accounts, transfers, loans, fraud alerts, and admin tools.
 
-**Live app:** [https://neobankx.vercel.app](https://neobankx.vercel.app)
+**Live app:** [https://neobankx.vercel.app](https://neobankx.vercel.app) (alias → `neo-bank` project)  
+**Vercel project:** `neo-bank` — `prj_C3Ka4Sq4SmLajh7fkXos1RuWto9v`
 
 ---
 
@@ -73,7 +74,7 @@ The repo deploys frontend + API on one Vercel project. Routes in `vercel.json` s
 |------------------|-----------------|
 | `DATABASE_URL`   | `postgresql://user:pass@host:5432/db` from [Neon](https://neon.tech) or [Supabase](https://supabase.com). **Do not use** `sqlite:///banking_app.db` on Vercel — the filesystem is read-only and registration will fail. |
 | `JWT_SECRET_KEY` | Long random string |
-| `CORS_ORIGINS`   | `https://neobankx.vercel.app,http://localhost:5174` |
+| `CORS_ORIGINS`   | `https://neo-bank-puce.vercel.app,http://localhost:5174` |
 | `VITE_API_URL`   | `/api` (set at build; also in `vercel.json` build command) |
 
 After changing env vars, **redeploy** from the Vercel dashboard or push to Git.
@@ -81,7 +82,7 @@ After changing env vars, **redeploy** from the Vercel dashboard or push to Git.
 ### Verify deployment
 
 ```bash
-curl https://neobankx.vercel.app/api/health
+curl https://neo-bank-puce.vercel.app/api/health
 ```
 
 Expected: `{"success":true,"message":"NeoBankX API is running",...}`
