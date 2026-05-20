@@ -94,11 +94,13 @@ def create_app(config_name='development'):
         app.logger.info('SQLALCHEMY_DATABASE_URI=%s', db_uri)
         print(f'SQLALCHEMY_DATABASE_URI={db_uri}')
 
+        if db_uri and db_uri.startswith('sqlite:////tmp/'):
+            os.makedirs('/tmp', exist_ok=True)
+
         try:
             db.create_all()
             app.logger.info('Database tables created / verified successfully')
         except Exception as e:
-            # In production, database might already be initialized or connection may fail
             app.logger.exception('Database initialization warning: %s', str(e))
 
         if app.config.get('DEBUG'):

@@ -4,6 +4,18 @@ from models import User, Account
 from utils.jwt_helper import generate_tokens
 from utils.validation import validate_email, validate_password, validate_phone
 
+
+def _friendly_db_error(action, exc):
+    message = str(exc).lower()
+    if 'readonly' in message or 'read-only' in message:
+        return (
+            f"{action} failed: database is read-only on this server. "
+            "In Vercel, set DATABASE_URL to a PostgreSQL URL (Neon/Supabase), "
+            "or remove a sqlite:/// DATABASE_URL so the app uses /tmp."
+        )
+    return f"{action} failed. Please try again later."
+
+
 class AuthService:
     """Service for authentication operations"""
     
@@ -59,7 +71,7 @@ class AuthService:
             }, None
         except Exception as e:
             db.session.rollback()
-            return None, f"Registration failed: {str(e)}"
+            return None, _friendly_db_error('Registration', e)
     
     @staticmethod
     def login(email, password):
@@ -102,4 +114,4 @@ class AuthService:
             return user.to_dict(), None
         except Exception as e:
             db.session.rollback()
-            return None, f"Update failed: {str(e)}"
+            return None, _friendly_db_error('Update', e)

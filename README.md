@@ -71,7 +71,7 @@ The repo deploys frontend + API on one Vercel project. Routes in `vercel.json` s
 
 | Variable         | Example / notes |
 |------------------|-----------------|
-| `DATABASE_URL`   | `postgresql://user:pass@host:5432/db` from [Neon](https://neon.tech) or [Supabase](https://supabase.com). **Required** — serverless has no persistent SQLite. |
+| `DATABASE_URL`   | `postgresql://user:pass@host:5432/db` from [Neon](https://neon.tech) or [Supabase](https://supabase.com). **Do not use** `sqlite:///banking_app.db` on Vercel — the filesystem is read-only and registration will fail. |
 | `JWT_SECRET_KEY` | Long random string |
 | `CORS_ORIGINS`   | `https://neobankx.vercel.app,http://localhost:5174` |
 | `VITE_API_URL`   | `/api` (set at build; also in `vercel.json` build command) |
@@ -171,6 +171,7 @@ const { user, isAuthenticated, login, register, logout } = useAuth();
 | Frontend calls wrong API | Build must use `VITE_API_URL=/api` (see `vercel.json`) |
 | `Email already registered` | Use another email or log in |
 | API 500 after deploy | Confirm `DATABASE_URL` uses `postgresql://` (app normalizes `postgres://`) |
+| `attempt to write a readonly database` | Remove `sqlite:///…` from Vercel env; set PostgreSQL `DATABASE_URL`, or delete `DATABASE_URL` to use `/tmp` (not persistent) |
 
 ---
 
