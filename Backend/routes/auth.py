@@ -45,27 +45,30 @@ def login():
 def get_current_user():
     """Get current user profile (requires auth)"""
     from middleware import token_required
+    from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
     
-    @token_required
-    def _get_profile(current_user_id):
+    try:
+        verify_jwt_in_request()
+        current_user_id = int(get_jwt_identity())
         result, error = AuthService.get_user(current_user_id)
         if error:
             return error_response(error, status_code=404)
         return success_response("User found", result)
-    
-    return _get_profile()
+    except Exception as e:
+        return error_response("Invalid or expired token", status_code=401)
 
 @auth_bp.route('/profile', methods=['PUT'])
 def update_profile():
     """Update user profile"""
-    from middleware import token_required
+    from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
     
-    @token_required
-    def _update(current_user_id):
+    try:
+        verify_jwt_in_request()
+        current_user_id = int(get_jwt_identity())
         data = request.get_json() or {}
         result, error = AuthService.update_profile(current_user_id, **data)
         if error:
             return error_response(error, status_code=400)
         return success_response("Profile updated", result)
-    
-    return _update()
+    except Exception as e:
+        return error_response("Invalid or expired token", status_code=401)
