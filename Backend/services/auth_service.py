@@ -22,26 +22,22 @@ class AuthService:
     @staticmethod
     def register(full_name, email, phone, password):
         """Register a new user"""
-        # Validation
-        if not validate_email(email):
-            return None, "Invalid email format"
-        
-        if not validate_phone(phone):
-            return None, "Invalid phone format"
-        
-        is_valid, errors = validate_password(password)
-        if not is_valid:
-            return None, "; ".join(errors)
-        
-        # Check if user exists
-        if User.query.filter_by(email=email).first():
-            return None, "Email already registered"
-        
-        if User.query.filter_by(phone=phone).first():
-            return None, "Phone number already registered"
-        
-        # Create user
         try:
+            if not validate_email(email):
+                return None, "Invalid email format"
+
+            if not validate_phone(phone):
+                return None, "Invalid phone format"
+
+            is_valid, errors = validate_password(password)
+            if not is_valid:
+                return None, "; ".join(errors)
+
+            if User.query.filter_by(email=email).first():
+                return None, "Email already registered"
+
+            if User.query.filter_by(phone=phone).first():
+                return None, "Phone number already registered"
             user = User(
                 full_name=full_name,
                 email=email,
@@ -72,23 +68,27 @@ class AuthService:
         except Exception as e:
             db.session.rollback()
             return None, _friendly_db_error('Registration', e)
-    
+
     @staticmethod
     def login(email, password):
         """Authenticate user and return tokens"""
-        user = User.query.filter_by(email=email).first()
-        
-        if not user or not user.check_password(password):
-            return None, "Invalid email or password"
-        
-        if not user.is_active:
-            return None, "User account is inactive"
-        
-        tokens = generate_tokens(user.id)
-        return {
-            'user': user.to_dict(),
-            'tokens': tokens
-        }, None
+        try:
+            user = User.query.filter_by(email=email).first()
+
+            if not user or not user.check_password(password):
+                return None, "Invalid email or password"
+
+            if not user.is_active:
+                return None, "User account is inactive"
+
+            tokens = generate_tokens(user.id)
+            return {
+                'user': user.to_dict(),
+                'tokens': tokens
+            }, None
+        except Exception as e:
+            db.session.rollback()
+            return None, _friendly_db_error('Login', e)
     
     @staticmethod
     def get_user(user_id):

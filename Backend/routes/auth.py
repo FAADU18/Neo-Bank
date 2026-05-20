@@ -1,7 +1,11 @@
 """Authentication routes"""
-from flask import Blueprint, request
+from flask import Blueprint, jsonify, request
 from services import AuthService
 from utils.response import success_response, error_response
+
+
+def _json_response(payload, status_code):
+    return jsonify(payload), status_code
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
@@ -22,9 +26,11 @@ def register():
     )
     
     if error:
-        return error_response(error, status_code=400)
-    
-    return success_response("Registration successful", result, 201)
+        body, code = error_response(error, status_code=400)
+        return _json_response(body, code)
+
+    body, code = success_response("Registration successful", result, 201)
+    return _json_response(body, code)
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -37,9 +43,11 @@ def login():
     result, error = AuthService.login(data['email'], data['password'])
     
     if error:
-        return error_response(error, status_code=401)
-    
-    return success_response("Login successful", result, 200)
+        body, code = error_response(error, status_code=401)
+        return _json_response(body, code)
+
+    body, code = success_response("Login successful", result, 200)
+    return _json_response(body, code)
 
 @auth_bp.route('/me', methods=['GET'])
 def get_current_user():

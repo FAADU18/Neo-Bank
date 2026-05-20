@@ -47,7 +47,11 @@ def create_app(config_name='development'):
         'testing': TestingConfig
     }
     app.config.from_object(config_dict.get(config_name, DevelopmentConfig))
-    
+
+    from config import engine_options_for_uri
+    db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options_for_uri(db_uri)
+
     # Initialize extensions
     CORS(app, origins=app.config['CORS_ORIGINS'], supports_credentials=True)
     db.init_app(app)
