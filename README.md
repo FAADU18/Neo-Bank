@@ -9,7 +9,7 @@ Full-stack digital banking app: React (Vite) frontend, Flask API, JWT auth, acco
 ## Project structure
 
 ```
-Banking_App/ 
+.
 ├── api/                 # Vercel serverless entry (Flask WSGI)
 │   ├── index.py
 │   └── requirements.txt
