@@ -3,6 +3,23 @@ import { authAPI } from '@/services/api';
 
 const AuthContext = createContext(null);
 
+function getAuthErrorMessage(err, fallback) {
+  if (!err.response) {
+    const isNetwork =
+      err.code === 'ERR_NETWORK' ||
+      err.message === 'Network Error' ||
+      err.message?.includes('Network Error');
+    if (isNetwork) {
+      return 'Cannot reach the API server. Start the backend: cd Backend && python app.py';
+    }
+    return err.message || fallback;
+  }
+  const { message, errors } = err.response.data || {};
+  if (message) return message;
+  if (Array.isArray(errors) && errors.length > 0) return errors.join('; ');
+  return fallback;
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -41,7 +58,7 @@ export function AuthProvider({ children }) {
       setUser(user);
       return user;
     } catch (err) {
-      const message = err.response?.data?.message || 'Login failed';
+      const message = getAuthErrorMessage(err, 'Login failed');
       setError(message);
       throw new Error(message);
     } finally {
@@ -67,7 +84,7 @@ export function AuthProvider({ children }) {
       setUser(user);
       return user;
     } catch (err) {
-      const message = err.response?.data?.message || 'Registration failed';
+      const message = getAuthErrorMessage(err, 'Registration failed');
       setError(message);
       throw new Error(message);
     } finally {

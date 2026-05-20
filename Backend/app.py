@@ -15,6 +15,27 @@ from database import db, init_db
 # Import routes
 from routes import auth_bp, account_bp, transaction_bp, loan_bp, admin_bp
 
+
+def _seed_dev_test_user(app):
+    """Create a default test account for local development."""
+    from models import User
+    from services import AuthService
+
+    if User.query.filter_by(email='test@example.com').first():
+        return
+
+    result, error = AuthService.register(
+        'Test User',
+        'test@example.com',
+        '9000000001',
+        'TestPass123!',
+    )
+    if error:
+        app.logger.warning('Dev test user seed skipped: %s', error)
+    else:
+        app.logger.info('Dev test user ready: test@example.com / TestPass123!')
+
+
 def create_app(config_name='development'):
     """Application factory"""
     app = Flask(__name__)
@@ -79,6 +100,9 @@ def create_app(config_name='development'):
         except Exception as e:
             # In production, database might already be initialized or connection may fail
             app.logger.exception('Database initialization warning: %s', str(e))
+
+        if app.config.get('DEBUG'):
+            _seed_dev_test_user(app)
     
     # Register blueprints
     app.register_blueprint(auth_bp)

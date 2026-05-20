@@ -7,9 +7,10 @@ const variants = {
   danger: 'bg-gradient-to-r from-rose-500 to-red-500 text-white',
 };
 
-export default function Button({ className = '', variant = 'primary', children, ...props }) {
+export default function Button({ className = '', variant = 'primary', type = 'button', children, ...props }) {
   return (
     <motion.button
+      type={type}
       whileHover={{ y: -2, scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
       className={`inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition ${variants[variant]} ${className}`}

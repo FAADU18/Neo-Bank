@@ -128,7 +128,7 @@ export default function RegisterPage() {
       </label>
       {errors.agree ? <p className="text-xs text-rose-300">{errors.agree}</p> : null}
 
-      <Button className="w-full" disabled={auth?.loading}>
+      <Button type="submit" className="w-full" disabled={auth?.loading}>
         {auth?.loading ? 'Creating account...' : 'Create account'}
       </Button>
     </form>

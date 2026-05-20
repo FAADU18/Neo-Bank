@@ -17,7 +17,7 @@ class Config:
     # CORS Configuration - Allow Vercel deployment domains
     CORS_ORIGINS = os.getenv(
         'CORS_ORIGINS',
-        'http://localhost:5173,http://localhost:5174,http://localhost:3000'
+        'https://neobankx.vercel.app,http://localhost:5173,http://localhost:5174,http://localhost:3000',
     ).split(',')
     
     # Session Configuration
@@ -39,10 +39,17 @@ class DevelopmentConfig(Config):
     )
 
 
+def _normalize_database_url(url):
+    """Heroku/Neon sometimes provide postgres://; SQLAlchemy expects postgresql://."""
+    if url and url.startswith('postgres://'):
+        return url.replace('postgres://', 'postgresql://', 1)
+    return url
+
+
 class ProductionConfig(Config):
     """Production configuration - requires `DATABASE_URL` to be set."""
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL') or 'sqlite:///banking_app.db'
+    SQLALCHEMY_DATABASE_URI = _normalize_database_url(os.getenv('DATABASE_URL')) or 'sqlite:////tmp/banking_app.db'
 
 
 class TestingConfig(Config):

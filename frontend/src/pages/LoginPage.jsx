@@ -82,12 +82,14 @@ export default function LoginPage() {
         </button>
       </div>
 
-      <Button className="w-full" disabled={auth?.loading}>
+      <Button type="submit" className="w-full" disabled={auth?.loading}>
         {auth?.loading ? 'Logging in...' : 'Login to dashboard'}
       </Button>
       
       <p className="text-center text-xs text-slate-400">
-        Test with email: <span className="font-mono text-cyan-300">test@example.com</span>
+        Dev login: <span className="font-mono text-cyan-300">test@example.com</span>
+        {' · '}
+        <span className="font-mono text-cyan-300">TestPass123!</span>
       </p>
     </form>
   );

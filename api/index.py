@@ -1,28 +1,24 @@
 """
 NeoBankX Flask App - Vercel Serverless Function Entry Point
-This file exports the Flask application for Vercel deployment
 """
 
-import sys
 import os
+import sys
 
-# Add parent directory to path so we can import Backend modules
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+_BACKEND = os.path.join(_ROOT, 'Backend')
 
-# If vendored dependencies were installed into api/.vercel during build,
-# add that folder to the import path so runtime can find Flask and friends.
+# Backend modules use imports like `from config import ...` (not Backend.config)
+sys.path.insert(0, _BACKEND)
+
 vendor_site = os.path.join(os.path.dirname(__file__), '.vercel')
 if os.path.isdir(vendor_site):
-	sys.path.insert(0, vendor_site)
+    sys.path.insert(0, vendor_site)
 
-# Set Flask environment to production for Vercel
 os.environ.setdefault('FLASK_ENV', 'production')
 
-# Import and create the Flask app from Backend
-from Backend.app import create_app
+from app import create_app  # noqa: E402
 
-# Create the app instance for Vercel
 app = create_app(config_name='production')
 
-# Export app for Vercel
 __all__ = ['app']
